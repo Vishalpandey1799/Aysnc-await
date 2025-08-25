@@ -1,0 +1,23 @@
+{
+  "name": "asyncawait",
+  "version": "1.0.0",
+  "description": "Will think about it",
+  "main": "index.js",
+  "type": "module",
+  "scripts": {
+    "start": "node index.js",
+    "dev": "nodemon src/index.js"
+  },
+  "author": "vishal and soumen",
+  "license": "MIT",
+  "dependencies": {
+    "@google/genai": "^1.15.0",
+    "@google/generative-ai": "^0.24.1",
+    "axios": "^1.11.0",
+    "cors": "^2.8.5",
+    "dotenv": "^17.2.1",
+    "express": "^5.1.0",
+    "multer": "^2.0.2",
+    "ws": "^8.18.3"
+  }
+}
