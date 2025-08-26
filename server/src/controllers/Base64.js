@@ -1,28 +1,12 @@
-import getResponse from "../config/gemini.js";
-import ttsStream from "../config/murfai.js";
-//  import saveAudioStreamToFile from "../config/murfai.js";
-
+ import { streamImageDescription } from "../config/gemini.js";
+ 
 export const sendingBase64 = async (req, res) => {
 
     try {
 
-        const file = req.file;
-
-
-
-        if (!file) {
-            return res.status(400).json({ message: "No file uploaded" });
-        }
-
-        const base64 = `data:${file.mimetype};base64,${file.buffer.toString('base64')}`;
-
-
-        let f = await getResponse(base64);
-
-        await ttsStream(f);
-
-        console.log("final data from gemini", f);
-
+        const { imageBase64: base64 } = req.body;
+         await streamImageDescription(base64)
+ 
         res.status(200).json({ data: base64 });
 
     } catch (error) {
