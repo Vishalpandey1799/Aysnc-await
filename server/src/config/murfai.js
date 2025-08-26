@@ -109,7 +109,7 @@ async function ttsStream(PARAGRAPH) {
 
     if (data.final) {
       console.log("Streaming finished.");
-      speaker.end();
+    
       ws.close();
     }
   });
