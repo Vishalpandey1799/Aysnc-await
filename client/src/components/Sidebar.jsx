@@ -17,7 +17,7 @@ import {
 
 const navItems = [
   { name: "Dashboard", url: "/", icon: Drone },
-  { name: "Chat", url: "/chat", icon: MessageSquare },
+  { name: "Chat", url: "/ling", icon: MessageSquare },
   { name: "Models", url: "/models", icon: BrainCircuit },
   { name: "Voice", url: "/talk", icon: Podcast },
 ];

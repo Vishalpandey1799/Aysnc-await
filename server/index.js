@@ -1,4 +1,4 @@
-import dotenv from 'dotenv';
+import dotenv from "dotenv";
 dotenv.config();
 import express from 'express';
 import cors from "cors";
@@ -23,7 +23,7 @@ app.use("/api", uploadingRoute);
 const server = http.createServer(app);
 
  
-const wss = new WebSocketServer({ server });
+export const wss = new WebSocketServer({ server });
 
  
 wss.on("connection", handleWsConnection);
