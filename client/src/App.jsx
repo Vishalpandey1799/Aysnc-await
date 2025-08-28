@@ -2,9 +2,10 @@ import React from "react";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import SidebarPage from "./pages/SidebarPage";
 import HomePage from "./pages/HomePage";
-
-import TalkingFrame from "./components/ChronicleGuide/ChronicleGuide";
 import LanguageLearningApp from "./service/Duolingo";
+import ChronicleGuide from "./components/ChronicleGuide/ChronicleGuide";
+
+
 
 const App = () => {
   return (
@@ -18,6 +19,8 @@ const App = () => {
             <Route path="*" element={<Navigate to="/" replace />} />
           </Route>
         </Routes>
+
+        {/* <ChronicleGuide /> */}
       </div>
     </BrowserRouter>
   );

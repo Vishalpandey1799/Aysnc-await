@@ -50,7 +50,7 @@ export class MurfTTSClient {
     this.ws.on('message', (data) => {
       try {
         const response = JSON.parse(data);
-        console.log('Received from Murf:', response);
+        
         
         if (response.audio) {
           const audioBytes = Buffer.from(response.audio, 'base64');
@@ -58,7 +58,11 @@ export class MurfTTSClient {
           // Skip the first 44 bytes (WAV header) only for the first chunk
           let processedAudio = audioBytes;
           if (this.isFirstChunk && audioBytes.length > 44) {
-            processedAudio = audioBytes.slice(44);
+            const isWavHeader = audioBytes.slice(0, 4).toString() === 'RIFF';
+            if(isWavHeader){
+              processedAudio = audioBytes.slice(44);
+              console.log('Removed WAV header from first chunk');
+            }
             this.isFirstChunk = false;
           }
           
@@ -100,6 +104,8 @@ export class MurfTTSClient {
       console.warn('WebSocket is not open. Cannot send text.');
     }
   }
+
+  
 
   close() {
     if (this.ws) {

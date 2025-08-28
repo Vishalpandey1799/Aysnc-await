@@ -17,7 +17,7 @@ const TalkingFrame = () => {
 
   // ---- WebSocket connection ----
   useEffect(() => {
-    const ws = new WebSocket("ws://localhost:0808");
+   const ws = new WebSocket("ws://localhost:5000");
     wsRef.current = ws;
 
     ws.onopen = () => {

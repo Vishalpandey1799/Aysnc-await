@@ -1,8 +1,9 @@
 import speech from "@google-cloud/speech";
 
+
 export class STTClient {
   static speechClient = new speech.SpeechClient({
-    keyFilename: "D:/Mern-Stack/Async-Await/server/speech-to-text.json",
+    keyFilename: "D:/THISISIT/Aysnc-await/server/speech-to-text.json",
   });
 
   constructor(onFinalTranscript) {
@@ -37,8 +38,10 @@ export class STTClient {
           console.log("Transcript:", transcript, "Is final:", isFinal);
 
           if (isFinal) {
-            this.transcript = transcript;
-            if(onFinalTranscript) onFinalTranscript(this.transcript);
+            this.transcript = transcript.trim();
+            if (onFinalTranscript && this.transcript.trim() !== "") {
+              onFinalTranscript(this.transcript);
+            }
           }
         });
       console.log("Speech-to-Text client initialized successfully");
