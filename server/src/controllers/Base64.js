@@ -1,4 +1,4 @@
- import { streamImageDescription } from "../config/gemini.js";
+ 
  
 export const sendingBase64 = async (req, res) => {
 
