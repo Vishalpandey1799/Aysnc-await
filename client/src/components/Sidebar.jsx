@@ -3,7 +3,12 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import {
   MessageSquare,
   BrainCircuit,
@@ -16,9 +21,9 @@ import {
 } from "lucide-react";
 
 const navItems = [
-  { name: "Dashboard", url: "/", icon: Drone },
-  { name: "Chat", url: "/ling", icon: MessageSquare },
-  { name: "Models", url: "/models", icon: BrainCircuit },
+  { name: "TalkingFrame", url: "/", icon: Drone },
+  { name: "LanguageTutor", url: "/chat", icon: MessageSquare },
+  { name: "LemmeDub", url: "/models", icon: BrainCircuit },
   { name: "Voice", url: "/talk", icon: Podcast },
 ];
 
@@ -37,13 +42,11 @@ function Sidebar() {
     return location.pathname.startsWith(url);
   };
 
-  
-
   return (
     <AnimatePresence initial={false}>
       <motion.aside
         className="relative h-screen bg-neutral-950 border-r border-neutral-800 flex flex-col overflow-hidden text-slate-100"
-        initial={{ width: expanded ? 256 : 72 }}
+        initial={false}
         animate={{ width: expanded ? 256 : 72 }}
         transition={{ duration: 0.2, ease: "easeInOut" }}
       >
@@ -52,7 +55,8 @@ function Sidebar() {
           <div className="relative flex h-9 w-9 items-center justify-center rounded-full bg-neutral-800/60">
             <Drone className="h-10 w-10" />
           </div>
-          <AnimatePresence>
+
+          <AnimatePresence mode="wait">
             {expanded && (
               <motion.span
                 key="brand"
@@ -66,11 +70,14 @@ function Sidebar() {
               </motion.span>
             )}
           </AnimatePresence>
+
           <Button
             aria-label="Toggle sidebar"
             variant="ghost"
             size="sm"
-            className= {`ml-auto ${!expanded && "absolute left-12" } h-8 w-8 p-0 rounded-full hover:bg-neutral-800/60`}
+            className={`ml-auto h-8 w-8 p-0 rounded-full hover:bg-neutral-800/60 ${
+              !expanded ? "absolute left-12" : ""
+            }`}
             onClick={() => setExpanded((v) => !v)}
           >
             {expanded ? <ChevronLeft size={16} /> : <ChevronRight size={16} />}
@@ -88,15 +95,16 @@ function Sidebar() {
                 const content = (
                   <Button
                     variant={active ? "secondary" : "ghost"}
-                    className={`w-full justify-start gap-3 ${expanded ? "px-3" : "px-0 justify-center"} ${
-                      active ? "bg-neutral-800/60 text-white" : ""
-                    }`}
+                    className={`w-full justify-start gap-3 ${
+                      expanded ? "px-3" : "px-0 justify-center"
+                    } ${active ? "bg-neutral-800/60 text-white" : ""}`}
                     onClick={() => navigate(url)}
                   >
                     <Icon size={expanded ? 22 : 20} />
                     <AnimatePresence>
                       {expanded && (
                         <motion.span
+                          key={name}
                           initial={{ opacity: 0, x: -6 }}
                           animate={{ opacity: 1, x: 0 }}
                           exit={{ opacity: 0, x: -6 }}
@@ -111,7 +119,7 @@ function Sidebar() {
                 );
 
                 return expanded ? (
-                  <div key={name} className="text-base">{content}</div>
+                  <div key={name}>{content}</div>
                 ) : (
                   <Tooltip key={name}>
                     <TooltipTrigger asChild>{content}</TooltipTrigger>
@@ -133,13 +141,16 @@ function Sidebar() {
                 const content = (
                   <Button
                     variant="ghost"
-                    className={`w-full justify-start gap-3 ${expanded ? "px-3" : "px-0 justify-center"}`}
+                    className={`w-full justify-start gap-3 ${
+                      expanded ? "px-3" : "px-0 justify-center"
+                    }`}
                     onClick={() => navigate(url)}
                   >
                     <Icon size={22} />
                     <AnimatePresence>
                       {expanded && (
                         <motion.span
+                          key={name}
                           initial={{ opacity: 0, x: -6 }}
                           animate={{ opacity: 1, x: 0 }}
                           exit={{ opacity: 0, x: -6 }}

@@ -31,7 +31,7 @@ export function createMurfClient(onAudio) {
   murfWs.on("message", (msg) => {
     try {
       const data = JSON.parse(msg.toString());
-      console.log("Murf msg:", data);
+  
 
       // forward audio chunks
       if (data.audio && onAudio) onAudio(data.audio);
