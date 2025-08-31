@@ -4,13 +4,48 @@ import { initiateMurfClient } from "./murfService.js";
 import { createMurfClient } from "../config/murfai.js";
 dotenv.config();
 
-// Initialize with environment variable only
+// Initialize Gemini client
 const ai = new GoogleGenAI({
   apiKey: process.env.GEMINI_API_KEY,
 });
 
-let murfClient = null;
+// System instruction — enhanced
+function buildSystemPrompt(
+  languageToLearn,
+  nativeLanguage,
+  proficiencyLevel,
+  name
+) {
+  return `
+You are an expert, friendly, and patient language tutor powered by AI.
+Your goal is to teach **${languageToLearn}** to a learner whose native language is **${nativeLanguage}**.
+The learner's proficiency level is **${proficiencyLevel}**.
 
+Rules:
+1. Always correct grammar, vocabulary, tenses, and sentence structure in the learner’s responses.
+   Example:
+   - User: "my name gautam"
+   - You: "Correct sentence: 'My name is Gautam."
+
+2. Use simple explanations in ${nativeLanguage} when necessary, but encourage replies mostly in ${languageToLearn}.
+
+3. Keep the conversation interactive — always ask follow-up questions to continue the dialogue.
+
+4. Adjust difficulty to the learner’s ${proficiencyLevel}.
+   - Beginner → short, simple questions & corrections.
+   - Intermediate → more complex sentences, introduce new vocabulary.
+   - Advanced → encourage fluency, idioms, and natural conversation.
+
+5. Encourage confidence: praise correct answers and motivate after mistakes.
+
+6. Stay conversational, never dump too much information at once.
+7.This is a voice based conversation so dont use emojis.
+Now, let’s start teaching ${name} step by step in ${languageToLearn}.
+  `;
+}
+
+// Murf client
+let murfClient = null;
 export async function getMurfClient(ws, voiceId) {
   console.log("Getting Murf client...");
   if (!murfClient) {
@@ -23,10 +58,10 @@ export async function getMurfClient(ws, voiceId) {
     }, voiceId);
     await murfClient.readyPromise;
   }
-
   return murfClient;
 }
 
+let conversationHistory = [];
 export async function processWithGemini(
   text,
   languageToLearn = "english",
@@ -35,93 +70,60 @@ export async function processWithGemini(
   voiceId = "en-US-alicia",
   proficiencyLevel = "Beginner",
   name = "Gautam"
-
-
-
 ) {
+  if (conversationHistory.length === 0) {
+    conversationHistory.push({
+      role: "assistant",
+      parts: [
+        {
+          text: buildSystemPrompt(
+            languageToLearn,
+            nativeLanguage,
+            proficiencyLevel,
+            name
+          ),
+        },
+      ],
+    });
+  }
+  // Add user message to history
+  conversationHistory.push({ role: "user", parts: [{ text }] });
 
   try {
-    const systemInstruction = ` You are an expert, patient, and encouraging language tutor. 
-Your goal is to help the learner (Name: ${name}, Native Language: ${nativeLanguage}, Target Language: ${languageToLearn}, Proficiency Level: ${proficiencyLevel}) 
-improve their grammar, vocabulary, pronunciation, and communication skills through real-time conversation.
-
-Guidelines:
-- Always reply in ${languageToLearn} but keep sentences simple and beginner-friendly.  
-- If the learner makes a mistake, correct it gently by repeating the sentence correctly and briefly explaining why.  
-- After corrections, encourage the learner to repeat or try again.  
-- Balance corrections with encouragement so the learner feels confident.  
-- Always ask a follow-up question to keep the conversation going.  
-- Occasionally mix small challenges appropriate for their level (e.g., ask them to make a short sentence, or introduce one new word).  
-
-Few-Shot Examples:
-
-User: my name gautam  
-Assistant: Almost correct! You should say: "My name is Gautam."  
-👉 The word **"is"** is needed here.  
-Can you repeat after me? What is your name?  
-
----
-
-User: i go market yesterday  
-Assistant: Good try! The correct way is: "I went to the market yesterday."  
-👉 We use the past tense **"went"** instead of "go."  
-Now you try: can you make another past tense sentence?  
-
----
-
-User: I am feeling happy today  
-Assistant: Excellent! That is a correct sentence.  
-Can you tell me, *why are you feeling happy today?*  
-
----
-
-Remember:  
-Keep the tone friendly, supportive, and interactive like a real tutor having a live conversation always end chat conversation with a question for continuation.
-
-    `;
-
-    // Properly format the contents array
-    const contents = [
-      {
-        role: "user",
-        parts: [
-          {
-            text: text,
-          },
-        ],
-      },
-    ];
-
     const response = await ai.models.generateContentStream({
       model: "gemini-2.0-flash",
-      contents: contents,
+      contents: conversationHistory,
       config: {
-        systemInstruction: systemInstruction,
+        systemInstruction: buildSystemPrompt(
+          languageToLearn,
+          nativeLanguage,
+          proficiencyLevel,
+          name
+        ),
         temperature: 0.8,
         maxOutputTokens: 1024,
-        thinkingConfig: {
-          thinkingBudget: 0,
-        },
       },
     });
+
     console.log("Murf call start:", voiceId);
     let murfClient = await getMurfClient(ws, voiceId);
+
     let fullResponse = "";
     let buffer = "";
 
     for await (const chunk of response) {
       if (chunk.text) {
-        //console.log("Gemini chunk:", chunk.text);
         buffer += chunk.text;
         fullResponse += chunk.text;
 
         if (/[.!?]\s*$/.test(buffer)) {
-          murfClient.sendText(buffer, false); // send full sentence
+          murfClient.sendText(buffer, false);
           console.log("Sent sentence to Murf:", buffer);
-          buffer = ""; // reset buffer
+          buffer = "";
         }
       }
     }
+
     if (buffer.length > 0) {
       console.log("Sending buffer to Murf:", buffer);
       murfClient.sendText(buffer, false);
@@ -136,18 +138,16 @@ Keep the tone friendly, supportive, and interactive like a real tutor having a l
       );
     }
 
-    contents.push({
+    // Save assistant response in history
+    conversationHistory.push({
       role: "assistant",
-      parts: [
-        {
-          text: fullResponse,
-        },
-      ],
+      parts: [{ text: fullResponse }],
     });
+
+    return fullResponse;
   } catch (error) {
     console.error("Gemini API Error:", error);
 
-    // Handle specific API errors :cite[2]
     if (error.status === 400) {
       throw new Error("Invalid request to Gemini API. Check your parameters.");
     } else if (error.status === 403) {
@@ -162,7 +162,7 @@ Keep the tone friendly, supportive, and interactive like a real tutor having a l
   }
 }
 
-// Test function with error handling
+// Test
 async function testGemini() {
   try {
     const response = await processWithGemini("Hello, I want to learn English");
