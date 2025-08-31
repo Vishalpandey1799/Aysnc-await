@@ -1,9 +1,10 @@
 import WebSocket from "ws";
 
 const MURF_WS = "wss://api.murf.ai/v1/speech/stream-input";
-const MURF_API_KEY = process.env.MURF_API_KEY || "ap2_c7abc8ae-7d19-4b35-84e3-a39b93a8ca7f";
+ 
+const MURF_API_KEY = process.env.MURF_API_KEY || "ap2_c1c1c091-7147-46a4-94ae-07a16161f5f4";
 
-export function createMurfClient(onAudio) {
+export function createMurfClient(onAudio, contextId) {
   const murfWs = new WebSocket(
     `${MURF_WS}?api-key=${MURF_API_KEY}&sample_rate=44100&channel_type=MONO&format=WAV`
   );
@@ -12,16 +13,12 @@ export function createMurfClient(onAudio) {
   const readyPromise = new Promise((res) => (readyResolve = res));
 
   murfWs.on("open", () => {
-    console.log("Murf WS connected");
-
-    // send voice config
+    console.log(`Murf WS connected for contextId: ${contextId}`);
     const voiceConfigMsg = {
+      contextId: contextId,
       voice_config: {
         voiceId: "en-US-amara",
         style: "Conversational",
-        rate: 0,
-        pitch: 0,
-        variation: 1,
       },
     };
     murfWs.send(JSON.stringify(voiceConfigMsg));
@@ -31,30 +28,41 @@ export function createMurfClient(onAudio) {
   murfWs.on("message", (msg) => {
     try {
       const data = JSON.parse(msg.toString());
-  
-
-      // forward audio chunks
+      
+      // console.log(`Murf message for contextId: ${contextId}:`, data.audio.slice(0, 30) + "...");
       if (data.audio && onAudio) onAudio(data.audio);
     } catch (e) {
       console.warn("Non-JSON Murf msg:", msg.toString());
     }
   });
 
-  murfWs.on("close", () => {
-    console.log("Murf WS closed");
+  murfWs.on("close", (code, reason) => {
+    console.log(`Murf WS closed for contextId: ${contextId}. Code: ${code} , Reason: ${reason}`);
   });
 
   murfWs.on("error", (err) => {
-    console.error("Murf WS error:", err);
+    console.error(`Murf WS error for contextId: ${contextId}:`, err);
   });
 
   return {
     readyPromise,
     sendText: (text, end = false) => {
       if (murfWs.readyState === WebSocket.OPEN) {
-        murfWs.send(JSON.stringify({ text, end }));
+        murfWs.send(JSON.stringify({ text, end, contextId }));
       }
     },
-    close: () => murfWs.close(),
+    
+    clear: () => {
+      if (murfWs.readyState === WebSocket.OPEN) {
+        console.log(`Sending CLEAR signal for contextId: ${contextId}`);
+        murfWs.send(JSON.stringify({ action: "clear", contextId: contextId }));
+      }
+    },
+    close: () => {
+        // Ensure we don't try to close a connection that's already closing or closed.
+        if (murfWs.readyState === WebSocket.OPEN || murfWs.readyState === WebSocket.CONNECTING) {
+            murfWs.close();
+        }
+    }
   };
 }

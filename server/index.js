@@ -9,7 +9,7 @@ import uploadingRoute from "./src/Routes/base.routes.js";
 import { handleWsConnection } from './src/config/connection.js'; //  Murf + Gemini handler
 
 const app = express();
-const PORT = process.env.PORT || 8080;  
+const PORT = process.env.PORT || 5000;  
 
 // Express middlewares
 app.use(express.json({ limit: "10mb" }));

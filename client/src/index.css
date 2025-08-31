@@ -110,6 +110,20 @@
   --sidebar-ring: oklch(0.556 0 0);
 }
 
+
+/* For a subtle, modern scrollbar */
+.custom-scrollbar::-webkit-scrollbar {
+  width: 8px;
+}
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background-color: rgba(100, 116, 139, 0.5); /* slate-500 with opacity */
+  border-radius: 20px;
+  border: 3px solid transparent;
+  background-clip: content-box;
+}
 @layer base {
   * {
     @apply border-border outline-ring/50;
@@ -118,3 +132,4 @@
     @apply bg-background text-foreground;
   }
 }
+
