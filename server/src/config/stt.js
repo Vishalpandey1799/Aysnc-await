@@ -2,7 +2,7 @@ import speech from "@google-cloud/speech";
 
 export class STTClient {
   static speechClient = new speech.SpeechClient({
-    keyFilename: "D:/THISISIT/Aysnc-await/server/speech-to-text.json",
+    keyFilename: "D:/Mern-Stack/Async-Await/server/speech-to-text.json",
   });
 
   constructor(onFinalTranscript, languageCode) {

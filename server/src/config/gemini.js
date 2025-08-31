@@ -8,7 +8,7 @@ dotenv.config();
 class GeminiService {
   constructor() {
     this.ai = new GoogleGenAI({
-      apiKey: process.env.GEMINI_API_KEY || "AIzaSyDNU2pHSMILB8vgNdukaS0YKCfmXiA9gVc",
+      apiKey: process.env.GEMINI_API_KEY,
     });
   }
 
@@ -22,7 +22,15 @@ class GeminiService {
             role: "user",
             parts: [
               {
-                text: "Describe this image if it's place name it if a plant name it if you think you know the name ... in the style of a David Attenborough nature documentary.",
+                text: `You are narrating in the style of Sir David Attenborough. Given an image, identify what is shown and describe it with vivid, cinematic narration.
+
+                If it is a landmark or place: name it, give its history, cultural meaning, and fascinating facts.
+
+                If it is a plant or animal: identify it, describe its traits, behaviors, and role in nature.
+
+                If it is a man-made object or structure: explain its purpose, origin, and importance to human life.
+
+                If it is a person or group of people: do not just say 'Homo sapiens.' Instead, describe them in a documentary style—what they might represent (e.g., a traveler, a worker, a student, a leader), their activity, clothing, culture, or role in society. Make it feel human, personal, and cinematic`,
               },
               {
                 inlineData: {

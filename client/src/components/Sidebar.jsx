@@ -13,23 +13,16 @@ import {
   MessageSquare,
   BrainCircuit,
   Podcast,
-  Settings,
-  HelpCircle,
   ChevronLeft,
   ChevronRight,
   Drone,
 } from "lucide-react";
 
+ 
 const navItems = [
-  { name: "TalkingFrame", url: "/", icon: Drone },
-  { name: "LanguageTutor", url: "/learning", icon: MessageSquare },
-  { name: "LemmeDub", url: "/models", icon: BrainCircuit },
-  { name: "Voice", url: "/talk", icon: Podcast },
-];
-
-const footerItems = [
-  { name: "Settings", url: "/settings", icon: Settings },
-  { name: "Help", url: "/help", icon: HelpCircle },
+  { name: "TalkingFrame", url: "/app", icon: Drone },
+  { name: "LanguageTutor", url: "/app/learning", icon: MessageSquare },
+  
 ];
 
 function Sidebar() {
@@ -37,10 +30,9 @@ function Sidebar() {
   const location = useLocation();
   const navigate = useNavigate();
 
-  const isActive = (url) => {
-    if (url === "/") return location.pathname === "/";
-    return location.pathname.startsWith(url);
-  };
+  // ✅ improved isActive check
+  const isActive = (url) =>
+    location.pathname === url || location.pathname.startsWith(url + "/");
 
   return (
     <AnimatePresence initial={false}>
@@ -132,50 +124,6 @@ function Sidebar() {
         </div>
 
         <Separator className="bg-neutral-800/80" />
-
-        {/* Footer */}
-        <div className="px-2 py-3">
-          <TooltipProvider delayDuration={0}>
-            <nav className="space-y-1">
-              {footerItems.map(({ name, url, icon: Icon }) => {
-                const content = (
-                  <Button
-                    variant="ghost"
-                    className={`w-full justify-start gap-3 ${
-                      expanded ? "px-3" : "px-0 justify-center"
-                    }`}
-                    onClick={() => navigate(url)}
-                  >
-                    <Icon size={22} />
-                    <AnimatePresence>
-                      {expanded && (
-                        <motion.span
-                          key={name}
-                          initial={{ opacity: 0, x: -6 }}
-                          animate={{ opacity: 1, x: 0 }}
-                          exit={{ opacity: 0, x: -6 }}
-                          transition={{ duration: 0.15 }}
-                          className="text-base font-medium"
-                        >
-                          {name}
-                        </motion.span>
-                      )}
-                    </AnimatePresence>
-                  </Button>
-                );
-
-                return expanded ? (
-                  <div key={name}>{content}</div>
-                ) : (
-                  <Tooltip key={name}>
-                    <TooltipTrigger asChild>{content}</TooltipTrigger>
-                    <TooltipContent side="right">{name}</TooltipContent>
-                  </Tooltip>
-                );
-              })}
-            </nav>
-          </TooltipProvider>
-        </div>
 
         {/* Subtle animated glow */}
         <motion.div

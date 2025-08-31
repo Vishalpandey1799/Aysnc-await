@@ -5,8 +5,8 @@ import cors from "cors";
 import http from "http";                 
 import { WebSocketServer } from "ws";   
 
-import uploadingRoute from "./src/Routes/base.routes.js";
-import { handleWsConnection } from './src/config/connection.js'; //  Murf + Gemini handler
+ 
+import { handleWsConnection } from './src/config/connection.js'; 
 
 const app = express();
 const PORT = process.env.PORT || 5000;  
@@ -18,7 +18,7 @@ app.use(cors({
     methods: ["GET", "POST", "PUT", "DELETE"],
     allowedHeaders: ["Content-Type", "Authorization"]
 }));
-app.use("/api", uploadingRoute);
+ 
  
 const server = http.createServer(app);
 

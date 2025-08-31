@@ -2,7 +2,7 @@ import WebSocket from "ws";
 
 const MURF_WS = "wss://api.murf.ai/v1/speech/stream-input";
  
-const MURF_API_KEY = process.env.MURF_API_KEY || "ap2_c1c1c091-7147-46a4-94ae-07a16161f5f4";
+const MURF_API_KEY = process.env.MURF_API_KEY;
 
 export function createMurfClient(onAudio, contextId) {
   const murfWs = new WebSocket(
@@ -30,7 +30,7 @@ export function createMurfClient(onAudio, contextId) {
     try {
       const data = JSON.parse(msg.toString());
       
-      // console.log(`Murf message for contextId: ${contextId}:`, data.audio.slice(0, 30) + "...");
+  
       if (data.audio && onAudio) onAudio(data.audio);
     } catch (e) {
       console.warn("Non-JSON Murf msg:", msg.toString());
