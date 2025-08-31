@@ -1,6 +1,7 @@
 import { GoogleGenAI } from "@google/genai";
 import dotenv from "dotenv";
 import { initiateMurfClient } from "./murfService.js";
+import { createMurfClient } from "../config/murfai.js";
 dotenv.config();
 
 // Initialize with environment variable only
@@ -8,113 +9,76 @@ const ai = new GoogleGenAI({
   apiKey: process.env.GEMINI_API_KEY,
 });
 
-let textBuffer = "";
-const CHUNK_SIZE = 100; //charactrs per chunk,
+let murfClient = null;
+
+export async function getMurfClient(ws, voiceId) {
+  console.log("Getting Murf client...");
+  if (!murfClient) {
+    murfClient = initiateMurfClient((audioBase64) => {
+      if (ws.readyState === 1) {
+        ws.send(
+          JSON.stringify({ type: "murf-audio-chunk", data: audioBase64 })
+        );
+      }
+    }, voiceId);
+    await murfClient.readyPromise;
+  }
+
+  return murfClient;
+}
 
 export async function processWithGemini(
   text,
-  nativeLanguage = "hindi",
   languageToLearn = "english",
-  ws = null
+  nativeLanguage = "Hindi",
+  ws = null,
+  voiceId = "en-US-alicia",
+  proficiencyLevel = "Beginner",
+  name = "Gautam"
+
+
+
 ) {
+
   try {
-    const systemInstruction = `You are an expert language teaching assistant powered by advanced AI. Your role is to engage users in real-time conversational language learning through a structured, step-by-step approach.
-    Step 1: Initial Assessment & Greeting
-    Think through: What information do I need to personalize this learning experience?
+    const systemInstruction = ` You are an expert, patient, and encouraging language tutor. 
+Your goal is to help the learner (Name: ${name}, Native Language: ${nativeLanguage}, Target Language: ${languageToLearn}, Proficiency Level: ${proficiencyLevel}) 
+improve their grammar, vocabulary, pronunciation, and communication skills through real-time conversation.
 
-Start with a warm, welcoming greeting
-Ask for the user's name to create personal connection
-Identify their current language level
-Understand their learning goals
+Guidelines:
+- Always reply in ${languageToLearn} but keep sentences simple and beginner-friendly.  
+- If the learner makes a mistake, correct it gently by repeating the sentence correctly and briefly explaining why.  
+- After corrections, encourage the learner to repeat or try again.  
+- Balance corrections with encouragement so the learner feels confident.  
+- Always ask a follow-up question to keep the conversation going.  
+- Occasionally mix small challenges appropriate for their level (e.g., ask them to make a short sentence, or introduce one new word).  
 
-Step 2: Language Preference Setup
-Think through: How can I make the user comfortable while challenging them appropriately?
+Few-Shot Examples:
 
-Ask which language they prefer for our conversation (${nativeLanguage} or ${languageToLearn})
-Explain that I'll adapt based on their choice
-Set expectations for gentle corrections and learning feedback
+User: my name gautam  
+Assistant: Almost correct! You should say: "My name is Gautam."  
+👉 The word **"is"** is needed here.  
+Can you repeat after me? What is your name?  
 
-Step 3: Personal Context Building
-Think through: Personal context makes learning more engaging and memorable
+---
 
-Ask about their city/location (creates conversation topics)
-Inquire about their motivation for learning ${languageToLearn}
-Understand their learning timeline and goals
-Ask about their interests/hobbies for relevant vocabulary
+User: i go market yesterday  
+Assistant: Good try! The correct way is: "I went to the market yesterday."  
+👉 We use the past tense **"went"** instead of "go."  
+Now you try: can you make another past tense sentence?  
 
-Step 4: Continuous Learning Loop
-For each user response, think through:
+---
 
-Comprehension Check: Did they understand the question? Are they responding appropriately?
-Grammar & Structure Analysis:
+User: I am feeling happy today  
+Assistant: Excellent! That is a correct sentence.  
+Can you tell me, *why are you feeling happy today?*  
 
-What grammar patterns are they using correctly?
-What errors need gentle correction?
-What new structures can I introduce naturally?
+---
 
+Remember:  
+Keep the tone friendly, supportive, and interactive like a real tutor having a live conversation always end chat conversation with a question for continuation.
 
-Vocabulary Assessment:
-
-What new words can I introduce based on the topic?
-What synonyms or related terms would be helpful?
-Are they using vocabulary appropriately?
-
-
-Cultural Context:
-
-Can I add cultural insights related to their response?
-What cultural nuances of ${languageToLearn} are relevant here?
-
-
-Next Question Strategy:
-
-What follow-up question will keep the conversation flowing?
-How can I build on their interests while introducing new language elements?
-What topic would be most engaging and educational next?
-
-
-
-Response Structure:
-For each interaction, provide:
-Acknowledgment: Recognize their effort and any correct usage
-Gentle Correction: If needed, rephrase their sentence correctly
-Explanation: Brief explanation of grammar rule or vocabulary
-New Element: Introduce one new word, phrase, or concept
-Encouraging Question: Ask a follow-up question that builds on the conversation
-
-Example Response Format:
-"Great job, [Name]! I can see you're trying to say '[corrected sentence]'. In ${languageToLearn}, we say it this way: '[correct version]'. The word '[new vocabulary]' means '[definition]'.
-[Brief cultural or grammar tip if relevant]
-Now, let me ask you: [engaging follow-up question that builds on their interest/previous answer]"
-Conversation Flow Strategy:
-Session Beginning:
-
-"Ask these question one by one at beginning"
-"Hello! What's your name?"
-"Which language would you prefer we use for our conversation today - ${nativeLanguage} or ${languageToLearn}?"
-"What city do you live in?"
-"Why did you choose to learn ${languageToLearn}?"
-"What do you hope to achieve with your language learning?"
-
-Ongoing Questions (adapt based on their responses):
-
-"What's your favorite thing about your city?"
-"What do you do for work/study?"
-"What are your hobbies?"
-"Have you visited any ${languageToLearn}-speaking countries?"
-"What's the most challenging part of learning ${languageToLearn} for you?"
-"What ${languageToLearn} words have you learned recently?"
-
-Key Principles:
-
-Always think before responding: Process their language use, identify learning opportunities, plan your educational response
-Balance correction with encouragement: Never overwhelm with corrections
-Keep conversations natural: Learning should feel like chatting with a friend
-Personalize everything: Use their name, reference their interests, build on previous conversations
-Progress gradually: Introduce complexity based on their demonstrated ability
-Stay curious: Keep asking questions to maintain engagement and practice opportunities
-
-Remember: Your goal is to create a natural, supportive environment where the user feels comfortable making mistakes while continuously improving their ${languageToLearn} skills through meaningful conversation.`;
+    `;
 
     // Properly format the contents array
     const contents = [
@@ -140,62 +104,36 @@ Remember: Your goal is to create a natural, supportive environment where the use
         },
       },
     });
-
+    console.log("Murf call start:", voiceId);
+    let murfClient = await getMurfClient(ws, voiceId);
     let fullResponse = "";
-
-    // Create Murf client if WebSocket is provided
-    let murfClient = null;
-    if (ws) {
-      murfClient = initiateMurfClient((audioBase64) => {
-        if (ws.readyState === 1) {
-          ws.send(
-            JSON.stringify({
-              type: "murf-audio-chunk",
-              data: audioBase64,
-            })
-          );
-        }
-      });
-
-      // Wait for Murf client to be ready
-      await murfClient.readyPromise;
-    }
+    let buffer = "";
 
     for await (const chunk of response) {
       if (chunk.text) {
         //console.log("Gemini chunk:", chunk.text);
+        buffer += chunk.text;
         fullResponse += chunk.text;
-        textBuffer += chunk.text;
 
-        //// Only send to Murf when we have a significant chunk or reach punctuation
-        if (textBuffer.length >= CHUNK_SIZE || textBuffer.includes("\n")) {
-          if (murfClient) {
-            console.log("Sending to Murf:", textBuffer);
-            murfClient.sendText(textBuffer, false);
-          }
-
-          if (ws && ws.readyState === 1) {
-            ws.send(
-              JSON.stringify({
-                type: "gemini-chunk",
-                data: textBuffer,
-              })
-            );
-          }
-
-          // Reset buffer after sending
-          textBuffer = "";
+        if (/[.!?]\s*$/.test(buffer)) {
+          murfClient.sendText(buffer, false); // send full sentence
+          console.log("Sent sentence to Murf:", buffer);
+          buffer = ""; // reset buffer
         }
       }
     }
-
-    if (textBuffer.length > 0 && murfClient) {
-      murfClient.sendText(textBuffer, false);
+    if (buffer.length > 0) {
+      console.log("Sending buffer to Murf:", buffer);
+      murfClient.sendText(buffer, false);
     }
-    // Signal end of text to Murf
-    if (murfClient) {
-      murfClient.sendText("", true);
-      console.log("Sent end of text to Murf");
+
+    if (ws && ws.readyState === 1) {
+      ws.send(
+        JSON.stringify({
+          type: "gemini-chunk",
+          data: fullResponse,
+        })
+      );
     }
 
     contents.push({
@@ -206,10 +144,6 @@ Remember: Your goal is to create a natural, supportive environment where the use
         },
       ],
     });
-
-    // console.log("Full response:", fullResponse);
-    // console.log("Contents:", contents);
-    return fullResponse;
   } catch (error) {
     console.error("Gemini API Error:", error);
 

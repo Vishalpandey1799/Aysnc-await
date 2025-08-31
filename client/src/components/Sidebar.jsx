@@ -22,7 +22,7 @@ import {
 
 const navItems = [
   { name: "TalkingFrame", url: "/", icon: Drone },
-  { name: "LanguageTutor", url: "/chat", icon: MessageSquare },
+  { name: "LanguageTutor", url: "/learning", icon: MessageSquare },
   { name: "LemmeDub", url: "/models", icon: BrainCircuit },
   { name: "Voice", url: "/talk", icon: Podcast },
 ];

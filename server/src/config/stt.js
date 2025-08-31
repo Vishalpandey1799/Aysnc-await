@@ -1,19 +1,19 @@
 import speech from "@google-cloud/speech";
 
-
 export class STTClient {
   static speechClient = new speech.SpeechClient({
     keyFilename: "D:/THISISIT/Aysnc-await/server/speech-to-text.json",
   });
 
-  constructor(onFinalTranscript) {
+  constructor(onFinalTranscript, languageCode) {
     this.transcript = "";
     this.recognizeStream = null;
-    this.initiateStt(onFinalTranscript);
     this.error = "";
+    this.languageCode = languageCode;
+    this.initiateStt(onFinalTranscript);
   }
 
-  initiateStt(onFinalTranscript) {
+  initiateStt(onFinalTranscript, languageCode) {
     console.log("Speech-to-Text client starting");
     try {
       this.recognizeStream = STTClient.speechClient
@@ -21,7 +21,7 @@ export class STTClient {
           config: {
             encoding: "LINEAR16",
             sampleRateHertz: 16000,
-            languageCode: "en-US",
+            languageCode: languageCode || "en-US",
             enableAutomaticPunctuation: true,
             model: "latest_long",
           },
@@ -44,7 +44,10 @@ export class STTClient {
             }
           }
         });
-      console.log("Speech-to-Text client initialized successfully");
+      console.log(
+        "Speech-to-Text client initialized successfully",
+        this.languageCode
+      );
     } catch (error) {
       console.error("Error initializing speech recognition:", error);
       this.error = error.message;

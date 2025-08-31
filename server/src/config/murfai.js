@@ -22,6 +22,7 @@ export function createMurfClient(onAudio, contextId) {
       },
     };
     murfWs.send(JSON.stringify(voiceConfigMsg));
+    console.log("Murf voice config sent");
     readyResolve();
   });
 
