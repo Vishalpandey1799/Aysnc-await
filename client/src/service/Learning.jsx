@@ -14,7 +14,7 @@ const LanguageLearninApp = () => {
   }, []);
   console.log("New-config", config);
   const [sessionState, setSessionState] = useState("idle");
-  const [localConfigData, setLocalConfigData] = useState({})
+  const [localConfigData, setLocalConfigData] = useState({});
   const navigate = useNavigate;
   //idle active ended
   const [messages, setMessages] = useState([]);
@@ -33,21 +33,19 @@ const LanguageLearninApp = () => {
   }, [messages]);
 
   useEffect(() => {
-    const websocket = new WebSocket("ws://localhost:5000");
+    const websocket = new WebSocket("wss://aysnc-await.onrender.com");
+
     wsRef.current = websocket;
 
     setLocalConfigData(JSON.parse(localStorage.getItem("config")));
 
     websocket.onopen = () => {
-      setConnectionStatus("connected")
+      setConnectionStatus("connected");
       // if(localConfigData !== null){
       //   websocket.send(
       //     JSON.stringify({ type: "session-config", data: localConfigData })
       //   );
       // }
-
-      
-
     };
     websocket.onclose = () => setConnectionStatus("disconnected");
     websocket.onerror = (error) => console.error("WebSocket error:", error);
@@ -279,17 +277,19 @@ const LanguageLearninApp = () => {
               )}
             </Button>
           </div>
-          <Button className={"w-14 rounded-full"} onClick={() => window.location.reload()} >
+          <Button
+            className={"w-14 rounded-full"}
+            onClick={() => window.location.reload()}
+          >
             <RefreshCcw size={28} />
-            
           </Button>
-          {
-            connectionStatus === "disconnected" ? (
-               <Badge>Refresh to connect</Badge>
-            ) : (
-              <Badge className={"pb-1 rounded-full"} variant={"outline"}>{connectionStatus}</Badge>
-            )
-          }
+          {connectionStatus === "disconnected" ? (
+            <Badge>Refresh to connect</Badge>
+          ) : (
+            <Badge className={"pb-1 rounded-full"} variant={"outline"}>
+              {connectionStatus}
+            </Badge>
+          )}
         </footer>
       )}
     </div>

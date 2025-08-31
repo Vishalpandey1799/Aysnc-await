@@ -43,7 +43,8 @@ const ChronicleGuide = () => {
   const textChunksRef = useRef([]); // store chunks for current context
 
   useEffect(() => {
-   const ws = new WebSocket("ws://localhost:5000");
+    const ws = new WebSocket("wss://aysnc-await.onrender.com");
+
     wsRef.current = ws;
 
     ws.onopen = () => setStatus("✅ Connected to server. Start camera.");
